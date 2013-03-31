@@ -28,9 +28,9 @@ validate(Map, Data, Fun) when is_function(Fun, 3)  ->
             {Errors, Result}
     end.
 
-handle({hash, Fields}, {Data0}, Errors0, Validator, Stack0) when is_list(Data0) ->
+handle({hash, Fields}, Data0, Errors0, Validator, Stack0) when is_list(Data0) ->
     {_Data1, Result, Errors1, Validator, _Stack1} = lists:foldl(
-        fun iterate_hash/2, {Data0, {[]}, Errors0, Validator, Stack0}, Fields),
+        fun iterate_hash/2, {Data0, [], Errors0, Validator, Stack0}, Fields),
     val(Validator, Result, Errors1, Stack0);
 handle({hash, _Fields}, Data0, Errors0, Validator, Stack0) ->
     fix(Validator, Data0, ?INVALID_HASH, Errors0, Stack0);
@@ -98,24 +98,24 @@ handle(Type, Data, Errors, _Validator, _Stack) ->
     error_logger:error_msg("Map definition error: invalid type: ~p", [Type]),
     {ok, Errors, Data}.
 
-iterate_hash({FName, Obligatoriness, Type}, {D0, {R0}, E0, V, S0}) ->
+iterate_hash({FName, Obligatoriness, Type}, {D0, R0, E0, V, S0}) ->
     case proplists:get_value(FName, D0) of
         %% required field is unset, we're trying to fix it
         undefined when required == Obligatoriness ->
             case fix(V, undefined, ?UNDEFINED_FIELD, E0, [FName | S0]) of
                 {ok, E1, R1} ->
-                    {D0, {R0++[{FName, R1}]}, E1, V, S0};
+                    {D0, R0++[{FName, R1}], E1, V, S0};
                 {error, E1, _R1} ->
-                    {D0, {R0}, E1, V, S0}
+                    {D0, R0, E1, V, S0}
             end;
         undefined ->
-            {D0, {R0}, E0, V, S0};
+            {D0, R0, E0, V, S0};
         Value ->
             case handle(Type, Value, E0, V, [FName | S0]) of
                 {ok, E1, R1} ->
-                    {D0, {R0++[{FName, R1}]}, E1, V, S0};
+                    {D0, R0++[{FName, R1}], E1, V, S0};
                 {error, E1, _R1} ->
-                    {D0, {R0}, E1, V, S0}
+                    {D0, R0, E1, V, S0}
             end
     end;
 iterate_hash(Any, {D0, R0, E0, V, S0}) ->
