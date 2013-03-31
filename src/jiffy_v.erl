@@ -127,7 +127,7 @@ path_by_stack(Stack) ->
         (Elem, <<>>) ->
             Elem;
         (Elem, Acc) ->
-            <<Acc/binary, <<".">>/binary, Elem/binary>>
+            << Acc/binary, $., Elem/binary >>
     end, <<>>, lists:reverse(Stack)).
 
 i_to_b(Int) when is_integer(Int) ->
