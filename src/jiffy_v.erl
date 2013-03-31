@@ -36,23 +36,17 @@ handle({hash, _Fields}, Data0, Errors0, Validator, Stack0) ->
     fix(Validator, Data0, ?INVALID_HASH, Errors0, Stack0);
 
 handle({list, [Variant | Variants]}, Data0, Errors0, Validator, Stack0) when is_list(Data0) ->
-    Result = lists:foldl(fun
+    lists:foldl(fun
         (Elem, {I0, Acc, E0, V, S0}) ->
             case handle(Variant, Elem, E0, V, [i_to_b(I0) | S0]) of
                 {ok, E1, R1} ->
-                    {I0 + 1, [R1 | Acc], E1, V, S0};
+                    val(V, lists:reverse([R1 | Acc]), E1, S0);
                 {error, _E1, _R1} ->
-                    failure
+                    handle({list, Variants}, Data0, Errors0, Validator, Stack0)
             end;
         (_Elem, failure) ->
-            failure
-    end, {0, [], Errors0, Validator, Stack0}, Data0),
-    case Result of
-        failure ->
-            handle({list, Variants}, Data0, Errors0, Validator, Stack0);
-        {_Index, Result1, Errors1, Validator, _Stack1} ->
-            val(Validator, lists:reverse(Result1), Errors1, Stack0)
-    end;
+            handle({list, Variants}, Data0, Errors0, Validator, Stack0)
+    end, {0, [], Errors0, Validator, Stack0}, Data0);
 handle({list, []}, Data0, Errors0, Validator, Stack0) when is_list(Data0) ->
     fix(Validator, Data0, ?INVALID_LIST, Errors0, Stack0);
 handle({list, _Variants}, Data0, Errors0, Validator, Stack0) ->
