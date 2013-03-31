@@ -99,18 +99,18 @@ handle(Type, Data, Errors, _Validator, _Stack) ->
     {ok, Errors, Data}.
 
 iterate_hash({FName, Obligatoriness, Type}, {D0, R0, E0, V, S0}) ->
-    case proplists:get_value(FName, D0) of
+    case lists:keyfind(FName, 1, D0) of
         %% required field is unset, we're trying to fix it
-        undefined when required == Obligatoriness ->
+        false when required == Obligatoriness ->
             case fix(V, undefined, ?UNDEFINED_FIELD, E0, [FName | S0]) of
                 {ok, E1, R1} ->
                     {D0, R0++[{FName, R1}], E1, V, S0};
                 {error, E1, _R1} ->
                     {D0, R0, E1, V, S0}
             end;
-        undefined ->
+        false ->
             {D0, R0, E0, V, S0};
-        Value ->
+        {_, Value} ->
             case handle(Type, Value, E0, V, [FName | S0]) of
                 {ok, E1, R1} ->
                     {D0, R0++[{FName, R1}], E1, V, S0};
