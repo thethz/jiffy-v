@@ -123,12 +123,12 @@ iterate_hash(Any, {D0, R0, E0, V, S0}) ->
     {D0, R0, E0, V, S0}.
 
 path_by_stack(Stack) ->
-    lists:foldl(fun
+    lists:foldr(fun
         (Elem, <<>>) ->
             Elem;
         (Elem, Acc) ->
             << Acc/binary, $., Elem/binary >>
-    end, <<>>, lists:reverse(Stack)).
+    end, <<>>, Stack).
 
 i_to_b(Int) when is_integer(Int) ->
     list_to_binary(integer_to_list(Int)).
